@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ChatJS</title>
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css" />
+</head>
+<body>
+<div id="history" style="height: 100px; margin-bottom: 50px; overflow: scroll; width: 100%;border: 1px solid black"></div>
+<form id="login">
+    <input type="text" placeholder="username" id="username">
+    <input type="button" id="loginBtn" value="Login">
+</form>
+<form id="chat" style="display: none">
+    <input type="text" id="msg_text" name="msg_text" />
+    <input type="button" id="btnSend" value="Send!" />
+</form>
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-scrollintoview/1.8/jquery.scrollintoview.js"></script>
+<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+<script type="text/javascript">
+    $(function () {
+        $('#loginBtn').click(function () {
+            var senderNickname = $('#username').val();
+            var socket = io.connect();
+            $(function () {
+                socket.emit("join", senderNickname);
+                $("#btnSend").click(function(e) {
+                    sendMessage(e);
+                });
+            });
+
+            function sendMessage(e){
+                e.preventDefault();
+                var msg= $("#msg_text").val();
+                socket.emit("messagedetection",senderNickname,msg, function() {
+                    $("#msg_text").val("");
+                });
+                $("#msg_text").val("");
+            }
+            socket.on("message", function(msg){
+                var final_message = $("<p />").text(msg.senderNickname+': '+ msg.message);
+                $("#history").append(final_message);
+                final_message.scrollintoview();
+            });
+
+            socket.on('updaterooms',function(msg){
+                var final_message = $("<p />").text(msg.senderNickname+': '+ msg.message);
+                $("#history").append(final_message);
+                final_message.scrollintoview();
+            })
+            socket.on('updatechat',function(msg){
+                console.log(msg);
+                var final_message = $("<p />").text(msg.senderNickname+': '+ msg.message);
+                $("#history").append(final_message);
+                final_message.scrollintoview();
+            })
+            socket.on('userdisconnect',function(msg){
+                var final_message = $("<p />").text(msg.senderNickname+': '+ msg.message);
+                $("#history").append(final_message);
+                final_message.scrollintoview();
+            })
+        })
+    })
+    
+
+</script>
+</body>
+</html>

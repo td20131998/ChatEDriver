@@ -1,0 +1,127 @@
+const express = require('express'),
+    http = require('http'),
+    app = express(),
+    server = http.createServer(app),
+    io = require('socket.io').listen(server);
+fs = require('fs');
+
+//enable public file
+app.use('/static', express.static('public'))
+
+app.get('/', (req, res) => {
+    res.send('Chat Server is running on port 3000')
+});
+app.get('/index.html', (req, res) => {
+
+    var file = "";
+    file = __dirname + req.url;
+
+    fs.readFile(file, function(err, data) {
+        if (err) {
+            res.writeHead(404);
+            return res.end('Page or file not found');
+        }
+        res.writeHead(200);
+        res.end(data);
+    });
+});
+
+app.post('/login', (req, res) => {
+
+});
+
+/////////////////////////////////////////////////////////////
+// Ms sql connect testing
+/////////////////////////////////////////////////////////////
+const sql = require('mssql');
+const dt = require('./libs/users');
+const sqlConfig = {
+    user: 'duongnt',
+    password: '123456',
+    server: "ADMIN",
+    database: 'ChatEDriver',
+    options: {
+        encrypt: false // Use this if you're on Windows Azure
+    }
+}
+// console.log(dt.myDateTime());
+sql.connect(sqlConfig, err => {
+    // ... error checks
+    // Query
+    new sql.Request().query('select * from [dbo].[User]', (errroute, result) => {
+        // ... error checks
+        if(!err){
+            // console.log(result.recordset);
+            for(var i in result.recordset){
+                console.log(result.recordset[i].User_ID);
+            }
+        }
+    });
+
+
+});
+/*
+
+setTimeout(function () {
+    const request = new sql.Request()
+    request.query('insert into users (user_id) values (553)', (err, result) => {
+        console.log(result)
+    });
+},3000)*/
+
+// usernames which are currently connected to the chat
+var usernames = {};
+
+// rooms which are currently available in chat
+var rooms = ['room1','room2','room3'];
+
+
+io.on('connection', (socket) => {
+
+    console.log('user connected')
+
+    socket.on('join', function(userNickname) {
+        console.log(userNickname +" : has joined the chat "  );
+
+        usernames['username'] = userNickname;
+
+        // store the username in the socket session for this client
+        socket.username = userNickname;
+        // store the room name in the socket session for this client
+        socket.room = 'room1';
+
+        socket.join('room1');
+
+        socket.broadcast.to('room1').emit('updatechat', {"message":"has joined the chat", "senderNickname":userNickname});
+        //socket.emit('updaterooms', rooms, 'room1');
+
+        socket.broadcast.emit('userjoinedthechat',{"message":"has joined the chat", "senderNickname":userNickname});
+    });
+
+
+    socket.on('messagedetection', (senderNickname,messageContent) => {
+
+        //log the message in console
+
+        console.log(senderNickname+" :" +messageContent)
+        //create a message object
+        let  message = {"message":messageContent, "senderNickname":senderNickname}
+        // send the message to the client side
+        io.emit('message', message );
+
+    });
+
+    socket.on('disconnect', function() {
+        socket.broadcast.emit("userdisconnect",{"message":"has left the chat", "senderNickname":socket.username});
+        console.log(socket.username);
+    });
+
+
+});
+
+
+server.listen(3000,()=>{
+
+    console.log('Node app is running on port 3000');
+
+});
