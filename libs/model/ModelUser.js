@@ -10,10 +10,47 @@ const sqlConfig = {
 };
 
 module.exports = {
-    isUserExisted: function() {
-
+    validate: function(newUser, callback) {
+        // console.log(newUser.Username);
+        let result = newUser.Username.trim();
+        if (result !== '') {
+            if (/^[a-zA-Z0-9]+$/.test(newUser.Username)) {
+                callback();
+            } else {
+                console.log('Username just includes alphabet and numbers');
+                return;
+            }
+        } else {
+            console.log("Invalid username");
+            return;
+        }
     },
-    createUser: function(newUser) {
+    isUserExisted: function(newUser) {
+        // console.log(newUser);
+        // console.log(callback);
+        sql.connect(sqlConfig, err => {
+            if (err) {
+                console.log(err);
+            } else {
+                console.log('Connection success');
+                new sql.Request().query(
+                    `SELECT * FROM [dbo].[User] WHERE Username = ${newUser.Username}`, (err, result) => {
+                    if (err) {
+                        // console.log(err)
+                        console.log('eeeeeeeeeeeeeeee ' + err + ' eeeeeeeeeeeeeeeeee');
+                        // console.log('Check user existed: false');
+                        sql.close();
+                        // return false;
+                    } else {
+                        // console.log('Check user existed: true');
+                        sql.close();
+                        // return true;
+                    }
+                });
+            };
+        });
+    },
+    createUser: function(newUser, callback) {
         sql.connect(sqlConfig, err => {
             if (err) {
                 console.log(err);
@@ -31,14 +68,15 @@ module.exports = {
                         console.log(err);
                         sql.close();
                     } else {
-                        console.log('Create Success');
+                        // console.log('Create Success');
                         sql.close();
+                        callback(newUser);
                     }
                 });
             };
         });
     },
-    deleteUser: function(User_ID) {
+    deleteUser: function(User_ID, callback) {
         sql.connect(sqlConfig, err => {
             if (err) {
                 console.log(err);
@@ -51,6 +89,7 @@ module.exports = {
                     } else {
                         console.log('Delete Success');
                         sql.close();
+                        callback()
                     } 
                 });
             };

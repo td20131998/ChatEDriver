@@ -11,7 +11,7 @@ const sqlConfig = {
 
 module.exports = {
     isMessageExisted: function() {
-
+        
     },
     createMessage: function(newMessage) {
         sql.connect(sqlConfig, err => {
