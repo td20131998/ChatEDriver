@@ -6,8 +6,14 @@ const sqlConfig = {
     database: 'ChatEDriver',
     options: {
         encrypt: false // Use this if you're on Windows Azure
+    },
+    pool: {
+        max: 10,
+        min: 0,
+        idleTimeoutMillis: 30000
     }
 };
+const connPool = new sql.ConnectionPool(sqlConfig).connect();
 
 module.exports = {
     validate: function(newUser, callback) {
@@ -15,40 +21,52 @@ module.exports = {
         let result = newUser.Username.trim();
         if (result !== '') {
             if (/^[a-zA-Z0-9]+$/.test(newUser.Username)) {
-                callback();
+                callback(result);
             } else {
                 console.log('Username just includes alphabet and numbers');
                 return;
             }
         } else {
-            console.log("Invalid username");
+            console.log("Username cannot be empty");
             return;
-        }
+        };
     },
-    isUserExisted: function(newUser) {
-        // console.log(newUser);
-        // console.log(callback);
-        sql.connect(sqlConfig, err => {
-            if (err) {
-                console.log(err);
+    isUserExisted: async function(newUser) {
+        await connPool;
+        try {
+            const request = new sql.Request(connPool);
+            const result = await request.query(`SELECT * FROM [dbo].[User] WHERE Username = '${newUser.Username}'`);
+            if (result.recordset.length !== 0) {
+                console.log('Username existed');
+                return true;
             } else {
-                console.log('Connection success');
-                new sql.Request().query(
-                    `SELECT * FROM [dbo].[User] WHERE Username = ${newUser.Username}`, (err, result) => {
-                    if (err) {
-                        // console.log(err)
-                        console.log('eeeeeeeeeeeeeeee ' + err + ' eeeeeeeeeeeeeeeeee');
-                        // console.log('Check user existed: false');
-                        sql.close();
-                        // return false;
-                    } else {
-                        // console.log('Check user existed: true');
-                        sql.close();
-                        // return true;
-                    }
-                });
-            };
-        });
+                return false;
+            }
+        } catch (err) {
+            console.log('SQL error: ' + err);
+        };
+        // sql.connect(sqlConfig, err => {
+        //     if (err) {
+        //         console.log('Connection error: ' + err);
+        //     } else {
+        //         new sql.Request().query(`SELECT * FROM [dbo].[User] WHERE Username = '${newUser.Username}'`, (err, result) => {
+        //             if (err) {
+        //                 sql.close();
+        //                 console.log('SQL error: ' + err);
+        //                 return;
+        //             } else {
+        //                 sql.close();
+        //                 if (result.recordset.length !== 0) {
+        //                     console.log('Username existed');
+        //                     return true;
+        //                 } else {
+        //                     return false;
+        //                 };
+        //                 // console.log(result);
+        //             }
+        //         })
+        //     }
+        // })
     },
     createUser: function(newUser, callback) {
         sql.connect(sqlConfig, err => {

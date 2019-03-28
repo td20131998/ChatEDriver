@@ -1,4 +1,5 @@
 const ModelUser = require('./ModelUser');
+// console.log(ModelUser);
 const ModelRoom = require('./ModelRoom');
 const ModelAdmin = require('./ModelAdmin');
 const ModelMessage = require('./ModelMessage');
@@ -17,11 +18,16 @@ let newUser = {
 // ModelUser.validate(newUser, () => {
 //     ModelUser.isUserExisted(newUser, () => {
 //         ModelUser.createUser(newUser, () => {
-//             console.log("Create success");
+//             console.log("Create success")
 //         });
 //     })
 // })
-console.log(ModelUser.isUserExisted({ Username: 'duongdeptrai'}));
+// ModelUser.validate(newUser, () => {
+//     if (!ModelUser.isUserExisted()) {
+//         ModelUser.createUser(newUser, () => { console.log('Create user success') });
+//     }
+// })
+ModelUser.isUserExisted({ Username: `duongdeptrai` });
 // ModelUser.deleteUser(999);
 
 
