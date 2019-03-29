@@ -1,58 +1,44 @@
 const sql = require('mssql');
-const sqlConfig = {
-    user: 'duongnt',
-    password: '123456',
-    server: "ADMIN",
-    database: 'ChatEDriver',
-    options: {
-        encrypt: false // Use this if you're on Windows Azure
-    }
-};
 
 module.exports = {
-    isUserRoomExisted: function() {
-
-    },
-    createUserRoom: function(newUserRoom) {
-        sql.connect(sqlConfig, err => {
+    checkUserRoomExist: function(userRoom, callback) {
+        new sql.Request().query(`SELECT * FROM [dbo].[User_Room] WHERE User_Room_ID = '${userRoom.User_Room_ID}'`, (err, result) => {
             if (err) {
                 console.log(err);
             } else {
-                console.log('Connection success');
-                new sql.Request().query(
-                    `INSERT INTO [dbo].[User_Room] VALUES (
-                        '${newUserRoom.User_Room_ID}',
-                        '${newUserRoom.User_ID}',
-                        '${newUserRoom.Room_ID}',
-                        '${newUserRoom.Status}'
-                    )`, err => {
-                    if (err) {
-                        console.log(err);
-                        sql.close();
-                    } else {
-                        console.log('Create Success');
-                        sql.close();
-                    }
-                });
-            };
+                if (result.recordset.length !== 0) {
+                    console.log('User_Room existed');
+                } else {
+                    callback(userRoom);
+                }
+            }
+        })
+    },
+    createUserRoom: function(newUserRoom, callback) {
+        new sql.Request().query(
+            `INSERT INTO [dbo].[User_Room] VALUES (
+                '${newUserRoom.User_Room_ID}',
+                '${newUserRoom.User_ID}',
+                '${newUserRoom.Room_ID}',
+                '${newUserRoom.Status}'
+            )`, err => {
+            if (err) {
+                console.log(err);
+                sql.close();
+            } else {
+                callback()
+            }
         });
     },
-    deleteUserRoom: function(User_Room_ID) {
-        sql.connect(sqlConfig, err => {
+    deleteUserRoom: function(User_Room_ID, callback) {
+        new sql.Request().query(`DELETE FROM [dbo].[User_Room] WHERE User_Room_ID = '${User_Room_ID}'`, err => {
             if (err) {
                 console.log(err);
+                sql.close();
             } else {
-                console.log('Connection success');
-                new sql.Request().query(`DELETE FROM [dbo].[User_Room] WHERE User_Room_ID = '${User_Room_ID}'`, err => {
-                    if (err) {
-                        console.log(err);
-                        sql.close();
-                    } else {
-                        console.log('Delete Success');
-                        sql.close();
-                    } 
-                });
-            };
+                callback()
+                // sql.close();
+            } 
         });
     }
 }

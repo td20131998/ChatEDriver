@@ -1,5 +1,3 @@
-const sql = require('mssql');
+// const sql = require('mssql');
 
-
-
-module.exports = new sql.ConnectionPool(sqlConfig).connect();
+// module.exports = new sql.ConnectionPool(sqlConfig).connect();
