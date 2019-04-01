@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "ejs": "^2.6.1",
     "express": "^4.15.3",
     "mssql": "^5.0.3",
     "nodemon": "^1.11.0",

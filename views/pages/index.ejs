@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ChatJS</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css" />
+</head>
+<body>
+
+<form id="login"> <%= language.get()%>
+    <input type="text" placeholder="username" id="username">
+    <input type="button" id="loginBtn" value="Login">
+</form>
+<form id="chat" style="display: none">
+    <table id="main-chat" style="width: 100%">
+        <tr>
+            <td colspan="2"><b id="my-account" style="color: #fff"></b></td>
+        </tr>
+        <tr>
+            <td width="200px">
+                <ul id="users">
+
+                </ul>
+            </td>
+            <td>
+                <div id="chat-rooms-container"></div>
+            </td>
+        </tr>
+       <!-- <td colspan="2">
+            <div id="history" style="overflow: scroll; width: 100%;border: 1px solid black"></div>
+        </td>-->
+    </table>
+</form>
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-scrollintoview/1.8/jquery.scrollintoview.js"></script>
+<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+<script type="text/javascript" src="/js/administrator.js"></script>
+
+</body>
+</html>

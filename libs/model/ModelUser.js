@@ -1,12 +1,13 @@
 const sql = require('mssql');
 const ModelUserRoom = require('./ModelUserRoom');
-const ModeUserAdmin = require('./ModelAdmin');
+const ModelAdmin = require('./ModelAdmin');
 
 module.exports = {
     validate: function(newUser, callback) {
         let result = newUser;
         result.Username = result.Username.trim()
         if (result.Username !== '') {
+            //username only incluses alphabet and numbers
             if (/^[a-zA-Z0-9]+$/.test(result.Username)) {
                 callback(result);
             } else {
@@ -16,8 +17,27 @@ module.exports = {
             console.log("Invalid username");
         };
     },
+
+    login: function(newUser, callback) {
+        console.log(newUser.Username);
+        new sql.Request().query(`SELECT * FROM [dbo].[User] WHERE Username = '${newUser.Username}'`, (err, result) => {
+            console.log(result);
+            if (err) {
+                console.log('SQL1 error: ' + err);
+                callback(false);
+            } else {
+                if (result.recordset.length === 1) {
+                    callback(result.recordset[0]);
+                } else {
+                    callback(false)
+                };
+            }
+
+
+            sql.close();
+        })
+    },
     checkUserExist: function(newUser, callback) {
-        // console.log(newUser);
         new sql.Request().query(`SELECT * FROM [dbo].[User] WHERE Username = '${newUser.Username}'`, (err, result) => {
             if (err) {
                 console.log('SQL error: ' + err);
@@ -47,8 +67,6 @@ module.exports = {
                 console.log(err);
                 sql.close();
             } else {
-                // console.log('Create Success');
-                // sql.close();
                 callback(newUser);
             }
         });
@@ -63,7 +81,7 @@ module.exports = {
                 new sql.Request().query(`SELECT * FROM [dbo].[User_Room] WHERE User_ID = '${User_ID}'`, (err, result) => {
                     let userRooms = result.recordset;
                     for(let userRoom of userRooms) {
-                        ModelUserRoom.deleteUserRoom(userRoom.User_Room_ID, () => console.log(`Delete ${userRoom.User_Room_ID} success`));
+                        ModelUserRoom.deleteUserRoom(userRoom.User_Room_ID, () => console.log(`Delete User_Room ${userRoom.User_Room_ID} success`));
                     };
                 });
 
@@ -71,9 +89,9 @@ module.exports = {
                 new sql.Request().query(`SELECT * FROM [dbo].[User_Admin] WHERE User_ID = '${User_ID}'`, (err, result) => {
                     let admins = result.recordset;
                     for(let admin of admins) {
-                        ModeAdmin.deleteAdmin(admin.Admin_ID, () => console.log(`Delete ${admin.Admin_ID} success`));
+                        ModelAdmin.deleteAdmin(admin.Admin_ID, () => console.log(`Delete admin ${admin.Admin_ID} success`));
                     }
-                })
+                });
                 callback();
             } 
         });

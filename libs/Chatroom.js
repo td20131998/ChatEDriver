@@ -1,9 +1,12 @@
-module.exports = function ({ name, image }) {
+module.exports = function (room_name,room_image) {
+    const roomName =room_name;
+    const roomImage =room_image;
     const members = new Map()
-    let chatHistory = []
+    var chatHistory = []
 
-    function broadcastMessage(message) {
-        members.forEach(m => m.emit('message', message))
+    function broadcastMessage(message,io) {
+        io.sockets.in(roomName).emit('message',message);
+        addEntry([message]);
     }
 
     function addEntry(entry) {
@@ -24,7 +27,7 @@ module.exports = function ({ name, image }) {
 
     function serialize() {
         return {
-            name,
+            room_name,
             image,
             numMembers: members.size
         }

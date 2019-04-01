@@ -2,15 +2,34 @@
 <html>
 <head>
     <title>ChatJS</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <link rel="stylesheet" type="text/css" href="/static/css/style.css" />
 </head>
 <body>
-<div id="history" style="height: 100px; margin-bottom: 50px; overflow: scroll; width: 100%;border: 1px solid black"></div>
+
 <form id="login">
     <input type="text" placeholder="username" id="username">
     <input type="button" id="loginBtn" value="Login">
 </form>
 <form id="chat" style="display: none">
+    <table id="main-chat" style="width: 100%">
+        <tr>
+            <td colspan="2"><b id="my-account"></b></td>
+        </tr>
+        <tr>
+            <td width="200px">
+                <ul id="users">
+
+                </ul>
+            </td>
+            <td>
+                <div id="history" style="overflow: scroll; width: 100%;border: 1px solid black"></div>
+            </td>
+        </tr>
+        <td colspan="2">
+            <div id="chat-rooms-container"></div>
+        </td>
+    </table>
     <input type="text" id="msg_text" name="msg_text" />
     <input type="button" id="btnSend" value="Send!" />
 </form>
@@ -19,35 +38,33 @@
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-scrollintoview/1.8/jquery.scrollintoview.js"></script>
 <script type="text/javascript" src="/socket.io/socket.io.js"></script>
 <script type="text/javascript">
+    var senderNickname;
     $(function () {
+        var el_users = $('#users');
         $('#loginBtn').click(function () {
-            var senderNickname = $('#username').val();
+            $('#login').hide();
+            $('#chat').show();
+            senderNickname = $('#username').val();
+            $('#my-account').html(senderNickname);
             var socket = io.connect();
-            $(function () {
-                socket.emit("join", senderNickname);
-                $("#btnSend").click(function(e) {
-                    sendMessage(e);
-                });
-            });
+            el_users.on('click','li',function () {
+                var username = $(this).data('username');
+                chatRoomManager.add(username,socket)
+                socket.emit("createroom", {sender:senderNickname,receive:username});
+            })
 
-            function sendMessage(e){
-                e.preventDefault();
-                var msg= $("#msg_text").val();
-                socket.emit("messagedetection",senderNickname,msg, function() {
-                    $("#msg_text").val("");
-                });
-                $("#msg_text").val("");
-            }
+            socket.emit("join", senderNickname);
+
             socket.on("message", function(msg){
-                var final_message = $("<p />").text(msg.senderNickname+': '+ msg.message);
-                $("#history").append(final_message);
-                final_message.scrollintoview();
+                chatBox.displayMessage(msg);
             });
 
             socket.on('updaterooms',function(msg){
                 var final_message = $("<p />").text(msg.senderNickname+': '+ msg.message);
                 $("#history").append(final_message);
                 final_message.scrollintoview();
+
+
             })
             socket.on('updatechat',function(msg){
                 console.log(msg);
@@ -60,9 +77,80 @@
                 $("#history").append(final_message);
                 final_message.scrollintoview();
             })
+            
+            socket.on('listuser',function (msg) {
+                for(var key in msg.users){
+                    el_users.append('<li data-username="'+key+'">'+key+'</li>');
+                }
+            });
+
+
         })
+
+
+
+
     })
-    
+
+    var chatRoomManager = (function() {
+        var rooms ={};
+        var el_chatRoomContainer = $('#chat-rooms-container');
+        return {
+            add: function (id,socket) {
+                el_chatRoomContainer.append('<div class="chatbox" id="room_'+id+'"><div class="messages" id="messages_"'+id+'></div><input data-id="'+id+'"  class="message" id="message_'+id+'" type="text" value=""><input data-id="'+id+'" class="bttn-send" type="button" id="btn_'+id+'" value="Gửi"></div>');
+                chatBox.add(id,socket);
+            }
+        }
+    })();
+
+    var chatBox = (function () {
+        var chats = new Map();
+        var getChatBox = function (id) {
+            return chats.get(id);
+        }
+        var removeChatBox = function (id) {
+            var chatBox = getChatBox(id);
+            chatBox.el_room.remove();
+            chats.delete(id);
+
+        }
+        var handSendMessage= function (cb) {
+            var msg = $('#message_'+cb.id).val();
+            $('#message_'+cb.id).html("");
+            debugger
+            cb.socket.emit("messagedetection",senderNickname,cb.id,msg, function() {
+                $("#msg_text").val("");
+            });
+        };
+        return{
+            add: function (id,socket) {
+                var chat = {
+                    id:id,
+                    messages: [],
+                    el_room: $('#room_'+id),
+                    el_messges: $('#messages_'+id),
+                    el_messge: $('#message_'+id),
+                    el_btn: $('#btn_'+id),
+                    socket: socket,
+                };
+                chat.el_btn.unbind('click');
+                chat.el_btn.click(function () {
+                    var id = $(this).attr('data-id');
+                    var cb= getChatBox(id);
+                    console.log(cb);
+                    handSendMessage(cb);
+
+                })
+                chats.set(id,chat);;
+            },
+            displayMessage: function(msg){
+                console.log(msg);
+                var final_message = $("<p />").text(msg.sender+': '+ msg.message);
+                $("#history").append(final_message);
+                final_message.scrollintoview();
+            }
+        }
+    })()
 
 </script>
 </body>

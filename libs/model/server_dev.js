@@ -29,7 +29,7 @@ sql.connect(config, err => {
     //Test ModelUser
     //////////////////////////////////
     let user = {
-        User_ID: '0000',
+        User_ID: '1',
         Username: 'test',
         Password: 'aaaaaaa',
         Avatar: 'Milu',
@@ -42,7 +42,8 @@ sql.connect(config, err => {
     //     })
     // });
     
-    // ModelUser.deleteUser('0000', () => { console.log('Deleted user success') });
+    ModelUser.deleteUser(user.User_ID, () => { console.log(`Deleted user success`) });
+    
     // ModelUser.deleteUser(999);
 
 
@@ -64,8 +65,8 @@ sql.connect(config, err => {
     //Test ModelAdmin
     //////////////////////////////////
     let newAdmin = {
-        Admin_ID: '2',
-        User_ID: '1111'
+        Admin_ID: '3',
+        User_ID: '1'
     };
     // ModelAdmin.checkUserAdminExist(newAdmin, (admin) => {
     //     ModelAdmin.createAdmin(admin, () => { console.log('Created admin success') });
@@ -94,13 +95,13 @@ sql.connect(config, err => {
     //Test ModelUserRoom
     //////////////////////////////////
     let newUserRoom = {
-        User_Room_ID: 'a541eb05-4c83-4b99-b9c2-cfa279681252',
-        User_ID: '1111',
+        User_Room_ID: 'a541eb05-4c83-4b99-b9c2-cfa279681258',
+        User_ID: '1',
         Room_ID: '234fssdf',
         Status: "First user room dsfs"
     };
-    ModelUserRoom.checkUserRoomExist(newUserRoom, (userRoom) => {
-        ModelUserRoom.createUserRoom(userRoom, () => console.log('Created User_Room success'));
-    });
+    // ModelUserRoom.checkUserRoomExist(newUserRoom, (userRoom) => {
+    //     ModelUserRoom.createUserRoom(userRoom, () => console.log('Created User_Room success'));
+    // });
     // ModelUserRoom.deleteUserRoom('a541eb05-4c83-4b99-b9c2-cfa279681752');
 });
