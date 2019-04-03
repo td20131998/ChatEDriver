@@ -1,0 +1,45 @@
+#eup-chat-service{
+  #users{
+    height: 350px;
+    background-color: white;
+    padding-left: 0px;
+    li{
+      list-style: none;
+      display: table;
+      width: 100%;
+      border-bottom: 1px solid #cccccc;
+      padding-top: 5px;
+      padding-bottom: 5px;
+      &:hover{
+        background-color: $c-green;
+        color: $c-white;
+        cursor: pointer;
+      }
+    }
+
+    .avatar{
+      display: inline-block;
+      float: left;
+      margin-right: 10px;
+      position: relative;
+      img{
+        width: 32px;
+      }
+      &:after{
+        display: inline-block;
+        content: "";
+        bottom: 0px;
+        right: 12px;
+        width: 12px;
+        height: 12px;
+        background-color: $c-red;
+        border-radius: 50%;
+      }
+      &.online{
+        &:after {
+          background-color: $c-medium-sea-green;
+        }
+      }
+    }
+  }
+}

@@ -2,114 +2,21 @@ const express = require('express'),
     http = require('http'),
     app = express(),
     server = http.createServer(app),
-    io = require('socket.io').listen(server),
-    fs = require('fs'),
-    ejs = require('ejs');
-var bodyParser     =         require("body-parser");
+    io = require('socket.io').listen(server);
+
+const fileUpload = require('express-fileupload');
+// default options
+app.use(fileUpload());
+
 var  language = require('./config/language');
 var config = require('./configuration');
 var chatroomManager = require('./libs/ChatroomManager');
 var usersManager = require('./libs/UserManager');
 usersManager.setChatroomManager(chatroomManager);
-
-
+var tokens = {};
 const sql = require('mssql');
-const sqlConfig = {
-    user: 'duongnt',
-    password: '123456',
-    server: "127.0.0.1",
-    database: 'ChatEDriver',
-    options: {
-        encrypt: false // Use this if you're on Windows Azure
-    }
-}
 
-var modelUser = require('./libs/model/ModelUser')
-
-// set the view engine to ejs
-app.set('view engine', 'ejs');
-
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-
-
-//enable public file
-app.use('/static', express.static('public'))
-
-app.get('/', (req, res) => {
-    res.send('Chat Server is running on port 3000')
-});
-
-app.get('/js/administrator.js', (req, res) => {
-    var file = "";
-    file = __dirname + '/views' + req.url;
-
-    fs.readFile(file,'utf-8', function(err, data) {
-        if (err) {
-            res.writeHead(404);
-            return res.end('Page or file not found');
-        }
-        var f = ejs.compile(data);
-        var fileContent = f({hostname: config.hostname});
-        res.setHeader('Content-Type', 'application/javascript');
-        res.setHeader('Content-Length', fileContent.length);
-        res.send(fileContent);
-    });
-});
-
-app.get('/index.html', (req, res) => {
-    let lng= req.query.lng;
-    console.log(language.getDefaultLang(req));
-    res.render('pages/index',{language:language});
-});
-
-app.post('/login', (req, res) => {
-    var username=req.body.username;
-    var password=req.body.password;
-    sql.connect(sqlConfig, err => {
-        modelUser.login({Username:username},function (user) {
-            if(user!== false){
-                user.Password = 'xxxxxxxxx';
-                res.json({
-                    status:1,
-                    data:{
-                        user: user,
-                    }
-                });
-            }else{
-                res.json({
-                    status:2,
-                    message: 'User not exist'
-                });
-            }
-
-        })
-    });
-
-
-});
-
-/////////////////////////////////////////////////////////////
-// Ms sql connect testing
-/////////////////////////////////////////////////////////////
-
-sql.connect(sqlConfig, err => {
-    // ... error checks
-    // Query
-    new sql.Request().query('select * from [dbo].[User]', (errroute, result) => {
-        // ... error checks
-        if(!err){
-            //console.log(result);
-            for(var i in result.recordset){
-                /*console.log(result);
-                console.log(result.recordset[i].user_id);*/
-            }
-        }
-
-        sql.close();
-    });
-});
-
+require('./routes/routes.js')(app,config,tokens,__dirname);
 
 
 /*
@@ -126,8 +33,18 @@ const usernames = {};
 // rooms which are currently available in chat
 const rooms = {};
 
-
-io.on('connection', (socket) => {
+io.use(function(socket, next){
+    //console.log(socket.handshake.query);
+    if (socket.handshake.query && socket.handshake.query.token){
+        if(tokens.hasOwnProperty(socket.handshake.query.token)){
+            next();
+        }else{
+            next(new Error('Authentication error'));
+        }
+    } else {
+        next(new Error('Authentication error'));
+    }
+}).on('connection', (socket) => {
 
     socket.on('join', function(userNickname) {
 
@@ -137,10 +54,12 @@ io.on('connection', (socket) => {
         usersManager.addClient(userNickname,socket);
 
         //join client to room exist
-
+/*
         let cloned = { ... usernames };
         delete cloned[userNickname];
-        socket.emit('listuser',{users : cloned});/*
+        socket.emit('listuser',{users : cloned});*/
+
+        /*
 
         if(typeof userRooms[userNickname] !== 'undefined' && typeof userRooms[userNickname]['rooms'] !== 'undefined'){
             for(var room_name in userRooms[userNickname]['rooms']){

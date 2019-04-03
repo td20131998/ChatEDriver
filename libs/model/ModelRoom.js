@@ -1,46 +1,34 @@
-const sql = require('mssql');
+const sql = require('./mssql');
 
 module.exports = {
     validate: function() {
 
     },
     checkRoomExist: function(room, callback) {
-        new sql.Request().query(`SELECT * FROM [dbo].[Room] WHERE Room_ID = '${room.Room_ID}'`, (err, result) => {
-            if (err) {
-                console.log(err);
-            } else {
+        sql.connect(function() {
+            sql.query(`SELECT * FROM [dbo].[Room] WHERE Room_ID = '${room.Room_ID}'`, result => {
                 if (result.recordset.length !== 0) {
-                    console.log('Room_ID existed');
+                    // console.log('Room_ID existed');
+                    sql.close(() => callback(true));
                 } else {
-                    callback(room);
+                    sql.close(() => callback(false));
                 }
-            }
+            })
         })
     },
     createRoom: function(newRoom, callback) {
-        new sql.Request().query(
-            `INSERT INTO [dbo].[Room] VALUES (
+        sql.connect(function() {
+            sql.query(`INSERT INTO [dbo].[Room] VALUES (
                 '${newRoom.Room_ID}',
                 '${newRoom.Room_Name}',
                 '${newRoom.Created}',
                 '${newRoom.Status}'
-            )`, err => {
-            if (err) {
-                console.log(err);
-                sql.close();
-            } else {
-                callback()
-            }
-        });
+            )`, result => sql.close(() => callback()));
+        })
     },
     deleteRoom: function(Room_ID, callback) {
-        new sql.Request().query(`DELETE FROM [dbo].[Room] WHERE Room_ID = '${Room_ID}'`, err => {
-            if (err) {
-                console.log(err);
-                sql.close();
-            } else {
-                callback(); 
-            } 
-        });
+        sql.connect(function() {
+            sql.query(`DELETE FROM [dbo].[Room] WHERE Room_ID = '${Room_ID}'`, result => sql.close(() => callback()));
+        })
     }
 }

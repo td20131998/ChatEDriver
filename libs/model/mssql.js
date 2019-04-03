@@ -1,3 +1,28 @@
-// const sql = require('mssql');
+const config = require('../../configuration');
+const sql = require('mssql');
 
-// module.exports = new sql.ConnectionPool(sqlConfig).connect();
+module.exports = {
+    connect: function(callback) {
+        sql.connect(config.sql, err => {
+            if (err) {
+                console.log(err);
+            } else {
+                callback();
+            }
+        })
+    },
+    query: function(sqlQuery, callback) {
+        new sql.Request().query(sqlQuery, (err, result) => {
+            if (err) {
+                console.log(err);
+            } else {
+                callback(result);
+            }
+        })
+    },
+    close: function(callback) {
+        sql.close();
+        callback();
+    }
+}
+

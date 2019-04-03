@@ -1,54 +1,38 @@
-const sql = require('mssql');
+const sql = require('./mssql');
 
 module.exports = {
     checkUserAdminExist: function(admin, callback) {
-        new sql.Request().query(`SELECT * FROM [dbo].[User] WHERE User_ID = '${admin.User_ID}'`, (err, result) => {
-            if (err) {
-                console.log(err);
-                sql.close();
-            } else {
+        sql.connect(function() {
+            sql.query(`SELECT * FROM [dbo].[User] WHERE User_ID = '${admin.User_ID}'`, result => {
                 if (result.recordset.length === 0) {
-                    console.log('User does not exist');
+                    // console.log('User does not exist');
+                    sql.close(() => callback(false));
                 } else {
-                    new sql.Request().query(`SELECT * FROM [dbo].[User_Admin] WHERE Admin_ID = '${admin.Admin_ID}'`, (err, result) => {
-                        if (err) {
-                            console.log(err);
-                            sql.close();
+                    sql.query(`SELECT * FROM [dbo].[User_Admin] WHERE Admin_ID = '${admin.Admin_ID}'`, result => {
+                        if (result.recordset.length !== 0) {
+                            console.log('Admin_ID existed');
+                            sql.close(() => callback(true));
                         } else {
-                            if (result.recordset.length !== 0) {
-                                console.log('Admin_ID existed');
-                            } else {
-                                callback(admin);
-                            }
+                            sql.close(() => callback(false));
                         }
                     })
                 };
-            }
+            })
         })
     },
     createAdmin: function(newAdmin, callback) {
-        new sql.Request().query(
-            `INSERT INTO [dbo].[User_Admin] VALUES (
+        sql.connect(function() {
+            sql.query(`INSERT INTO [dbo].[User_Admin] VALUES (
                 '${newAdmin.Admin_ID}',
                 '${newAdmin.User_ID}'
-            )`, err => {
-            if (err) {
-                console.log(err);
-                sql.close();
-            } else {
-                callback();
-            }
-        });
+            )`, result => sql.close(() => callback()));
+        })
     },
     deleteAdmin: function(Admin_ID, callback) {
-        new sql.Request().query(`DELETE FROM [dbo].[User_Admin] WHERE Admin_ID = '${Admin_ID}'`, err => {
-            if (err) {
-                console.log(err);
-                sql.close();
-            } else {
-                callback();
-                // sql.close();
-            } 
-        });
+        sql.connect(function() {
+            sql.query(`DELETE FROM [dbo].[User_Admin] WHERE Admin_ID = '${Admin_ID}'`, result => {
+                sql.close(() => callback());
+            })
+        })
     }
 }

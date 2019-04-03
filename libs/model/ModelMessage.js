@@ -1,9 +1,9 @@
-const sql = require('mssql');
+const sql = require('./mssql');
 
 module.exports = {
     createMessage: function(newMessage, callback) {
-        new sql.Request().query(
-            `INSERT INTO [dbo].[Message] VALUES (
+        sql.connect(function() {
+            sql.query(`INSERT INTO [dbo].[Message] VALUES (
                 '${newMessage.Message_ID}',
                 '${newMessage.Sender_ID}',
                 '${newMessage.Room_ID}',
@@ -11,24 +11,14 @@ module.exports = {
                 '${newMessage.Type}',
                 '${newMessage.Created}',
                 '${newMessage.Status}'
-            )`, err => {
-            if (err) {
-                console.log(err);
-                sql.close();
-            } else {
-                callback()
-                // sql.close();
-            }
-        });
+            )`, resutl => sql.close(() => callback()));
+        })
     },
     deleteMessage: function(Message_ID, callback) {
-        new sql.Request().query(`DELETE FROM [dbo].[Message] WHERE Message_ID = '${Message_ID}'`, err => {
-            if (err) {
-                console.log(err);
-                sql.close();
-            } else {
-                callback();
-            } 
-        });
+        sql.connect(function() {
+            sql.query(`DELETE FROM [dbo].[Message] WHERE Message_ID = '${Message_ID}'`, result => {
+                sql.close(() => callback());
+            })
+        })
     }
 }
